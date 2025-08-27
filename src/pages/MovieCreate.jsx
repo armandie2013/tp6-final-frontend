@@ -1,210 +1,119 @@
-import { useState, useMemo } from "react";
-import { Movies } from "../services/movies";
-import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { api } from "../lib/api";
 import { toast } from "react-toastify";
-import { safeImage } from "../utils/images";
-import { validateMovie, fe } from "../utils/validation";
+import { useNavigate } from "react-router-dom";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useAuth } from "../context/AuthContext";
+
+const schema = yup.object({
+  title: yup.string().required("Título requerido"),
+  year: yup
+    .number()
+    .typeError("Año debe ser numérico")
+    .min(1878, "Año inválido")
+    .max(new Date().getFullYear() + 1, "Año inválido"),
+  genres: yup.string().required("Géneros requeridos"),
+  ageRating: yup
+    .string()
+    .oneOf(["G","PG","PG-13","R","NC-17"], "Clasificación inválida")
+    .required("Clasificación requerida"),
+  poster: yup.string().url("URL inválida").nullable().transform(v => (v === "" ? null : v)),
+  overview: yup.string().nullable().transform(v => (v === "" ? null : v)),
+});
 
 export default function MovieCreate() {
+  const { role } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    titulo: "",
-    director: "",
-    year: "",
-    genero: "",
-    descripcion: "",
-    imagen: "",
-    rating: "",
-  });
-  const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
 
-  const previewSrc = useMemo(() => {
-    if (!form.imagen?.trim()) return "";
-    return safeImage(form.imagen);
-  }, [form.imagen]);
+  if (role !== "owner") {
+    return <div className="p-6 text-red-600">No tenés permisos para crear películas.</div>;
+  }
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const { isValid, errors: errs, data } = validateMovie(form);
-    setErrors(errs);
-
-    if (!isValid) {
-      const first = Object.values(errs)[0];
-      toast.warn(first || "Revisá los campos");
-      return;
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      title: "",
+      year: "",
+      genres: "",
+      ageRating: "PG-13",
+      poster: "",
+      overview: "",
     }
+  });
+
+  const onSubmit = async (v) => {
+    const payload = {
+      title: v.title,
+      year: v.year ? Number(v.year) : undefined,
+      genres: v.genres.split(",").map(s => s.trim()).filter(Boolean),
+      ageRating: v.ageRating,
+      poster: v.poster || undefined,
+      overview: v.overview || undefined,
+    };
 
     try {
-      setSubmitting(true);
-      await Movies.create({ ...data, year: data.year || "" });
+      await api.post("/movies", payload);
       toast.success("Película creada");
-      navigate("/items");
-    } catch {
-      toast.error("No se pudo crear");
-    } finally {
-      setSubmitting(false);
+      navigate("/movies");
+    } catch (e) {
+      // El interceptor ya muestra el error, este es por si se desactiva
+      toast.error(e?.response?.data?.error || "No se pudo crear");
     }
   };
 
-  const base =
-    "w-full px-3 py-2 rounded bg-white text-slate-800 border focus:outline-none focus:ring-2 dark:bg-slate-800 dark:text-white";
-  const ok = "border-slate-300 focus:ring-blue-500 focus:border-blue-500 dark:border-slate-600";
-  const bad = "border-red-500 focus:ring-red-500 focus:border-red-500";
-
   return (
-    <form onSubmit={handleSubmit} className="max-w-xl mx-auto p-4 space-y-4">
-      {/* Vista previa */}
-      {previewSrc && (
-        <div className="w-full bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-center dark:bg-slate-800 dark:border-slate-700">
-          <img
-            src={previewSrc}
-            alt="Vista previa"
-            className="w-full h-auto max-h-[40vh] object-contain rounded"
-            loading="lazy"
-            decoding="async"
-            referrerPolicy="no-referrer"
-            onError={(e) => {
-              e.currentTarget.src =
-                "https://via.placeholder.com/800x450?text=Sin+imagen";
-              e.currentTarget.className =
-                "w-full h-auto max-h-[40vh] object-contain rounded opacity-70";
-            }}
-          />
-        </div>
-      )}
+    <section className="p-4 md:p-6 max-w-xl mx-auto">
+      <h1 className="text-xl font-semibold mb-4">Nueva película</h1>
 
-      {/* Titulo */}
-      <div>
-        <label className="block text-sm font-medium mb-1">
-          Título <span className="text-red-600">*</span>
-        </label>
-        <input
-          name="titulo"
-          placeholder="Ej: Interstellar"
-          value={form.titulo}
-          onChange={handleChange}
-          className={`${base} ${fe(errors, "titulo") ? bad : ok}`}
-          required
-        />
-        {fe(errors, "titulo") && (
-          <p className="mt-1 text-xs text-red-600">{fe(errors, "titulo")}</p>
-        )}
-      </div>
-
-      {/* Director */}
-      <div>
-        <label className="block text-sm font-medium mb-1">Director</label>
-        <input
-          name="director"
-          placeholder="Ej: Christopher Nolan"
-          value={form.director}
-          onChange={handleChange}
-          className={`${base} ${fe(errors, "director") ? bad : ok}`}
-        />
-        {fe(errors, "director") && (
-          <p className="mt-1 text-xs text-red-600">{fe(errors, "director")}</p>
-        )}
-      </div>
-
-      {/* Año y Genero */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         <div>
-          <label className="block text-sm font-medium mb-1">Año</label>
-          <input
-            name="year"
-            type="number"
-            placeholder="Ej: 2023"
-            value={form.year}
-            onChange={handleChange}
-            className={`${base} ${fe(errors, "year") ? bad : ok}`}
-            inputMode="numeric"
-            pattern="\d{4}"
-            title="Cuatro dígitos, ej: 2023"
-          />
-          {fe(errors, "year") && (
-            <p className="mt-1 text-xs text-red-600">{fe(errors, "year")}</p>
-          )}
+          <label className="text-sm block mb-1">Título</label>
+          <input className="border p-2 w-full rounded" placeholder="Ej: The Matrix" {...register("title")} />
+          {errors.title && <p className="text-sm text-red-600">{errors.title.message}</p>}
         </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-sm block mb-1">Año</label>
+            <input className="border p-2 w-full rounded" placeholder="1999" {...register("year")} />
+            {errors.year && <p className="text-sm text-red-600">{errors.year.message}</p>}
+          </div>
+          <div>
+            <label className="text-sm block mb-1">Clasificación</label>
+            <select className="border p-2 w-full rounded" {...register("ageRating")}>
+              <option value="G">G</option>
+              <option value="PG">PG</option>
+              <option value="PG-13">PG-13</option>
+              <option value="R">R</option>
+              <option value="NC-17">NC-17</option>
+            </select>
+            {errors.ageRating && <p className="text-sm text-red-600">{errors.ageRating.message}</p>}
+          </div>
+        </div>
+
         <div>
-          <label className="block text-sm font-medium mb-1">Género</label>
-          <input
-            name="genero"
-            placeholder="Ej: Ciencia ficción"
-            value={form.genero}
-            onChange={handleChange}
-            className={`${base} ${fe(errors, "genero") ? bad : ok}`}
-          />
-          {fe(errors, "genero") && (
-            <p className="mt-1 text-xs text-red-600">{fe(errors, "genero")}</p>
-          )}
+          <label className="text-sm block mb-1">Géneros</label>
+          <input className="border p-2 w-full rounded" placeholder="Action, Sci-Fi" {...register("genres")} />
+          {errors.genres && <p className="text-sm text-red-600">{errors.genres.message}</p>}
         </div>
-      </div>
 
-      {/* Imagen */}
-      <div>
-        <label className="block text-sm font-medium mb-1">URL de la imagen</label>
-        <input
-          name="imagen"
-          placeholder="URL https (.jpg, .jpeg, .png, .webp)"
-          value={form.imagen}
-          onChange={handleChange}
-          className={`${base} ${fe(errors, "imagen") ? bad : ok}`}
-        />
-        {fe(errors, "imagen") && (
-          <p className="mt-1 text-xs text-red-600">{fe(errors, "imagen")}</p>
-        )}
-      </div>
+        <div>
+          <label className="text-sm block mb-1">Poster (URL, opcional)</label>
+          <input className="border p-2 w-full rounded" placeholder="https://..." {...register("poster")} />
+          {errors.poster && <p className="text-sm text-red-600">{errors.poster.message}</p>}
+        </div>
 
-      {/* Descripcion */}
-      <div>
-        <label className="block text-sm font-medium mb-1">Descripción</label>
-        <textarea
-          name="descripcion"
-          placeholder="Breve sinopsis"
-          value={form.descripcion}
-          onChange={handleChange}
-          rows={4}
-          className={`${base} ${fe(errors, "descripcion") ? bad : ok}`}
-        />
-        {fe(errors, "descripcion") && (
-          <p className="mt-1 text-xs text-red-600">{fe(errors, "descripcion")}</p>
-        )}
-      </div>
+        <div>
+          <label className="text-sm block mb-1">Descripción (opcional)</label>
+          <textarea className="border p-2 w-full rounded" rows={4} placeholder="Sinopsis..." {...register("overview")} />
+          {errors.overview && <p className="text-sm text-red-600">{errors.overview.message}</p>}
+        </div>
 
-      {/* Rating */}
-      <div>
-        <label className="block text-sm font-medium mb-1">Rating (0–10)</label>
-        <input
-          name="rating"
-          type="number"
-          min="0"
-          max="10"
-          step="0.1"
-          placeholder="Ej: 8.5"
-          value={form.rating}
-          onChange={handleChange}
-          className={`${base} ${fe(errors, "rating") ? bad : ok}`}
-        />
-        {fe(errors, "rating") && (
-          <p className="mt-1 text-xs text-red-600">{fe(errors, "rating")}</p>
-        )}
-      </div>
-
-      <div className="pt-2">
-        <button
-          disabled={submitting}
-          className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
-        >
-          {submitting ? "Guardando..." : "Guardar"}
+        <button disabled={isSubmitting} className="px-3 py-2 rounded bg-black text-white disabled:opacity-50">
+          {isSubmitting ? "Guardando…" : "Crear"}
         </button>
-      </div>
-    </form>
+      </form>
+    </section>
   );
 }
