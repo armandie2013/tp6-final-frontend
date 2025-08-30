@@ -25,54 +25,60 @@ export default function Login() {
   const onSubmit = async ({ email, password }) => {
     try {
       await login(email, password);
-      navigate("/profiles", { replace: true }); // mejor que window.location.href
+      navigate("/profiles", { replace: true });
     } catch (e) {
-      // Si tu interceptor ya hace toast, podés dejar vacío este catch.
-      // Si no, descomentá:
-      // toast.error(e?.response?.data?.error || "No se pudo iniciar sesión");
+      // Si usás interceptor para errores, no hace falta nada acá.
     }
   };
 
   return (
-    <div className="min-h-screen grid place-items-center p-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-sm space-y-3">
-        <h1 className="text-2xl font-semibold">Ingresar</h1>
+    <section className="p-4 md:p-6">
+      <div className="max-w-sm mx-auto">
+        <h1 className="text-xl font-semibold mb-4">Ingresar</h1>
 
-        <div>
-          <input
-            className="border p-2 w-full rounded"
-            placeholder="Email"
-            autoComplete="email"
-            autoFocus
-            {...register("email")}
-          />
-          {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
-        </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+          <div>
+            <input
+              className="border p-2 w-full rounded"
+              placeholder="Email"
+              autoComplete="email"
+              autoFocus
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-sm text-red-600">{errors.email.message}</p>
+            )}
+          </div>
 
-        <div>
-          <input
-            className="border p-2 w-full rounded"
-            placeholder="Password"
-            type="password"
-            autoComplete="current-password"
-            {...register("password")}
-          />
-          {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
-        </div>
+          <div>
+            <input
+              className="border p-2 w-full rounded"
+              placeholder="Password"
+              type="password"
+              autoComplete="current-password"
+              {...register("password")}
+            />
+            {errors.password && (
+              <p className="text-sm text-red-600">{errors.password.message}</p>
+            )}
+          </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-black text-white p-2 rounded disabled:opacity-50"
-        >
-          {isSubmitting ? "Ingresando…" : "Entrar"}
-        </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-black text-white p-2 rounded disabled:opacity-50"
+          >
+            {isSubmitting ? "Ingresando…" : "Entrar"}
+          </button>
+        </form>
 
         <p className="text-sm text-slate-500 mt-4 text-center">
           ¿No tenés cuenta?{" "}
-          <Link to="/auth/register" className="underline">Crear cuenta</Link>
+          <Link to="/auth/register" className="underline">
+            Crear cuenta
+          </Link>
         </p>
-      </form>
-    </div>
+      </div>
+    </section>
   );
 }

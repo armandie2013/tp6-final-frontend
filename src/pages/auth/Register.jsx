@@ -13,40 +13,79 @@ const schema = yup.object({
 export default function Register() {
   const { register: doRegister, login } = useAuth();
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm({
     resolver: yupResolver(schema),
-    defaultValues: { email: "", password: "" }
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = async ({ email, password }) => {
-    await doRegister(email, password);
-    toast.success("Usuario registrado");
-    // opcional: loguear automáticamente
-    await login(email, password);
-    navigate("/profiles");
+    try {
+      await doRegister(email, password);
+      toast.success("Usuario registrado");
+      // opcional: loguear automáticamente
+      await login(email, password);
+      navigate("/profiles", { replace: true });
+      reset();
+    } catch (e) {
+      // Si tu interceptor ya muestra errores, podés omitir este toast
+      toast.error(e?.response?.data?.error || "No se pudo registrar");
+    }
   };
 
   return (
-    <div className="max-w-sm mx-auto">
-      <h1 className="text-xl font-semibold mb-4">Crear cuenta</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-        <div>
-          <input className="border p-2 w-full rounded" placeholder="Email" {...register("email")} />
-          {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
-        </div>
-        <div>
-          <input className="border p-2 w-full rounded" placeholder="Password" type="password" {...register("password")} />
-          {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
-        </div>
-        <button disabled={isSubmitting} className="w-full bg-black text-white p-2 rounded disabled:opacity-50">
-          {isSubmitting ? "Creando…" : "Registrarme"}
-        </button>
-      </form>
+    <section className="p-4 md:p-6">
+      <div className="max-w-sm mx-auto">
+        <h1 className="text-xl font-semibold mb-4">Crear cuenta</h1>
 
-      <p className="text-sm text-slate-500 mt-4">
-        ¿Ya tenés cuenta?{" "}
-        <Link to="/auth/login" className="underline">Ingresá</Link>
-      </p>
-    </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+          <div>
+            <input
+              className="border p-2 w-full rounded"
+              type="email"
+              placeholder="Email"
+              autoComplete="email"
+              autoFocus
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-sm text-red-600">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div>
+            <input
+              className="border p-2 w-full rounded"
+              placeholder="Password"
+              type="password"
+              autoComplete="new-password"
+              {...register("password")}
+            />
+            {errors.password && (
+              <p className="text-sm text-red-600">{errors.password.message}</p>
+            )}
+          </div>
+
+          <button
+            disabled={isSubmitting}
+            className="w-full bg-black text-white p-2 rounded disabled:opacity-50"
+          >
+            {isSubmitting ? "Creando…" : "Registrarme"}
+          </button>
+        </form>
+
+        <p className="text-sm text-slate-500 mt-4 text-center">
+          ¿Ya tenés cuenta?{" "}
+          <Link to="/auth/login" className="underline">
+            Ingresá
+          </Link>
+        </p>
+      </div>
+    </section>
   );
 }
