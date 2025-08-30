@@ -8,6 +8,7 @@ import Favorites from "../pages/Favorites"; // opcional; lo podés quitar si ya 
 import NotFound from "../pages/NotFound";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
 import Profiles from "../pages/Profiles";
 import RequireProfile from "../components/RequireProfile";
 import Watchlist from "../pages/Watchlist";
@@ -17,6 +18,7 @@ export default function AppRouter() {
     <Routes>
       {/* Públicas */}
       <Route path="/auth/login" element={<Login />} />
+      <Route path="/auth/register" element={<Register />} />
 
       {/* Protegidas por auth */}
       <Route element={<ProtectedRoute />}>
