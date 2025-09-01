@@ -3,7 +3,7 @@
 Frontend desarrollado con **React**, **Vite**, **TailwindCSS** y **React Router** para la gestión de usuarios, perfiles y películas (watchlist + importación desde TMDb).
 
 🌐 **Deploy en Netlify:**  
-https://tp6-front-nodo.netlify.app/auth/login
+tp6-front-nodo.netlify.app
 
 ---
 
