@@ -32,7 +32,7 @@ export default function Navbar() {
         <nav className="glass px-4 py-3 flex items-center justify-between gap-2">
           {/* Brand */}
           <Link to="/" className="font-semibold tracking-tight text-lg">
-            Nodo<span className="text-blue-600">Cine</span>
+            Pelis<span className="text-blue-600">Data</span>
           </Link>
 
           {/* Links */}
