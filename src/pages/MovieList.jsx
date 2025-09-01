@@ -47,7 +47,7 @@ export default function MovieList() {
     try {
       const params = {
         page,
-        limit: PER_PAGE, // 👈 importante para que el backend pagine
+        limit: PER_PAGE, // 
         ...(search ? { search } : {}),
         ...(genre ? { genre } : {}),
         ...(year ? { year } : {}),
@@ -100,88 +100,113 @@ export default function MovieList() {
   const goPage = (p) => setMany({ page: p });
 
   return (
-    <section className="p-4 md:p-6">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-semibold">Películas</h1>
-          <p className="text-sm text-slate-500">
-            Buscá y filtrá resultados. El backend pagina y filtra.
-          </p>
-        </div>
+    <section className="max-w-6xl mx-auto">
+      {/* Encabezado */}
+      <div className="card mb-6">
+        <div className="card-body flex items-center justify-between gap-2">
+          <div>
+            <h1 className="card-title">Películas</h1>
+            <p className="card-subtle">
+              Buscá y filtrá resultados.
+            </p>
+          </div>
 
-        {role === "owner" && (
-          <button
-            onClick={() => setShowImport(true)}
-            className="px-3 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 text-sm"
-          >
-            Importar TMDb
-          </button>
-        )}
+          {role === "owner" && (
+            <button
+              onClick={() => setShowImport(true)}
+              className="btn-primary"
+              title="Importar desde TMDb"
+            >
+              Importar TMDB
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filtros */}
-      <form
-        onSubmit={applyFilters}
-        className="mb-4 grid grid-cols-1 md:grid-cols-5 gap-2"
-      >
-        <input
-          className="border p-2 rounded"
-          placeholder="Buscar por título…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <form onSubmit={applyFilters} className="card mb-6">
+        <div className="card-body grid grid-cols-1 md:grid-cols-5 gap-3">
+          <input
+            className="input"
+            placeholder="Buscar por título…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-        <select
-          className="border p-2 rounded"
-          value={genre}
-          onChange={(e) => setGenre(e.target.value)}
-        >
-          <option value="">Todos los géneros</option>
-          <option value="Acción">Acción</option>
-          <option value="Aventura">Aventura</option>
-          <option value="Comedia">Comedia</option>
-          <option value="Drama">Drama</option>
-          <option value="Terror">Terror</option>
-          {/* agrega los géneros que manejes */}
-        </select>
+          <select
+            className="input"
+            value={genre}
+            onChange={(e) => setGenre(e.target.value)}
+          >
+            <option value="">Todos los géneros</option>
+            <option value="Acción">Acción</option>
+            <option value="Aventura">Aventura</option>
+            <option value="Comedia">Comedia</option>
+            <option value="Drama">Drama</option>
+            <option value="Terror">Terror</option>
+            {/* agrega los géneros que manejes */}
+          </select>
 
-        <input
-          className="border p-2 rounded"
-          placeholder="Año (ej: 1999)"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-        />
+          <input
+            className="input"
+            placeholder="Año (ej: 1999)"
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+          />
 
-        {/* Buscar en la base */}
-        <button className="px-3 py-2 rounded bg-black text-white" title="Buscar en la base">
-          Buscar
-        </button>
+          {/* Buscar en la base */}
+          <button className="btn-primary" title="Buscar en la base">
+            Buscar
+          </button>
 
-        {/* Forzar búsqueda en TMDb */}
-        <button
-          type="button"
-          className="px-3 py-2 rounded border"
-          title="Buscar también en TMDb"
-          onClick={() => {
-            const q = (search || "").trim();
-            setTmdbInitialQuery(q);
-            setTmdbAutoSearch(!!q);
-            setShowImport(true);
-          }}
-        >
-          Buscar en TMDb
-        </button>
+          {/* Forzar búsqueda en TMDb */}
+          <button
+            type="button"
+            className="btn-outline"
+            title="Buscar también en TMDb"
+            onClick={() => {
+              const q = (search || "").trim();
+              setTmdbInitialQuery(q);
+              setTmdbAutoSearch(!!q);
+              setShowImport(true);
+            }}
+          >
+            Buscar en TMDB
+          </button>
+
+          {/* Acciones secundarias */}
+          <div className="md:col-span-5 flex items-center gap-2">
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={clearFilters}
+              title="Limpiar filtros"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        </div>
       </form>
 
       {/* Resultados internos */}
       {loading && (
-        <div className="py-6 text-center text-slate-500">Cargando…</div>
-      )}
-      {!loading && movies.length === 0 && search && showImport && (
-        <div className="py-6 text-center text-slate-500">
-          Sin resultados en la base. Buscando en TMDb…
+        <div className="card mb-6">
+          <div className="card-body">
+            <p className="card-subtle text-center">Cargando…</p>
+          </div>
         </div>
       )}
+
+      {!loading && movies.length === 0 && search && showImport && (
+        <div className="card mb-6">
+          <div className="card-body">
+            <p className="card-subtle text-center">
+              Sin resultados en la base. Buscando en TMDB…
+            </p>
+          </div>
+        </div>
+      )}
+
       {!loading && movies.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {movies.map((m) => (
@@ -196,11 +221,11 @@ export default function MovieList() {
           <button
             onClick={() => goPage(Math.max(1, pageInfo.page - 1))}
             disabled={pageInfo.page <= 1}
-            className="px-3 py-1 rounded border disabled:opacity-50"
+            className="btn-outline disabled:opacity-50"
           >
             Anterior
           </button>
-          <span className="text-sm">
+          <span className="text-sm card-subtle">
             Página {pageInfo.page} / {pageInfo.totalPages}
           </span>
           <button
@@ -208,7 +233,7 @@ export default function MovieList() {
               goPage(Math.min(pageInfo.totalPages, pageInfo.page + 1))
             }
             disabled={pageInfo.page >= pageInfo.totalPages}
-            className="px-3 py-1 rounded border disabled:opacity-50"
+            className="btn-outline disabled:opacity-50"
           >
             Siguiente
           </button>
@@ -220,7 +245,7 @@ export default function MovieList() {
         open={showImport}
         onClose={() => {
           setShowImport(false);
-          setTmdbAutoSearch(false); // reseteo para próximas veces
+          setTmdbAutoSearch(false); 
         }}
         onImported={() => load(1)}
         initialQuery={tmdbInitialQuery}

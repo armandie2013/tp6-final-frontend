@@ -7,12 +7,11 @@ export default function MovieEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // 👇 Sin forzar PG-13 por defecto
   const [form, setForm] = useState({
     title: "",
     year: "",
     genres: [],
-    ageRating: "",      // vacío por defecto
+    ageRating: "",
     overview: "",
     poster: "",
   });
@@ -26,7 +25,7 @@ export default function MovieEdit() {
           title: data.title || "",
           year: data.year ?? "",
           genres: Array.isArray(data.genres) ? data.genres : [],
-          ageRating: data.ageRating ?? "",   // 👈 no forzar PG-13
+          ageRating: data.ageRating ?? "",
           overview: data.overview || "",
           poster: data.poster || "",
         });
@@ -34,6 +33,7 @@ export default function MovieEdit() {
       })
       .catch(() => {
         setLoading(false);
+        toast.error("No se pudo cargar la película");
       });
   }, [id]);
 
@@ -51,7 +51,6 @@ export default function MovieEdit() {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      // 👇 si está vacío, no lo enviamos
       const payload = { ...form };
       if (!payload.ageRating) delete payload.ageRating;
 
@@ -63,68 +62,113 @@ export default function MovieEdit() {
     }
   };
 
-  if (loading) return <div className="p-6 text-center text-slate-500">Cargando…</div>;
+  if (loading) {
+    return (
+      <section className="max-w-3xl mx-auto">
+        <div className="card">
+          <div className="card-body">
+            <p className="card-subtle">Cargando…</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className="p-4 md:p-6 max-w-xl mx-auto">
-      <h1 className="text-xl font-semibold mb-4">Editar película</h1>
-      <form onSubmit={onSubmit} className="space-y-3">
-        <input
-          className="border p-2 w-full rounded"
-          name="title"
-          value={form.title}
-          onChange={onChange}
-          placeholder="Título"
-        />
-        <input
-          className="border p-2 w-full rounded"
-          name="year"
-          value={form.year}
-          onChange={onChange}
-          placeholder="Año (1999)"
-        />
-        <input
-          className="border p-2 w-full rounded"
-          name="genres"
-          value={form.genres.join(", ")}
-          onChange={onChange}
-          placeholder="Géneros (Action, Sci-Fi)"
-        />
-
-        {/* 👇 Reemplazo del input por un select con todas las opciones */}
-        <div>
-          <label className="block text-sm mb-1">Clasificación</label>
-          <select
-            className="border p-2 w-full rounded"
-            name="ageRating"
-            value={form.ageRating}
-            onChange={onChange}
-          >
-            <option value="">(Sin clasificación)</option>
-            <option value="G">G</option>
-            <option value="PG">PG</option>
-            <option value="PG-13">PG-13</option>
-            <option value="R">R</option>
-            <option value="NC-17">NC-17</option>
-          </select>
+    <section className="max-w-3xl mx-auto">
+      <div className="card mb-6">
+        <div className="card-body">
+          <h1 className="card-title">Editar película</h1>
+          <p className="card-subtle">Modificá los datos y guardá los cambios.</p>
         </div>
+      </div>
 
-        <input
-          className="border p-2 w-full rounded"
-          name="poster"
-          value={form.poster}
-          onChange={onChange}
-          placeholder="URL del poster"
-        />
-        <textarea
-          className="border p-2 w-full rounded"
-          name="overview"
-          value={form.overview}
-          onChange={onChange}
-          placeholder="Descripción"
-          rows={4}
-        />
-        <button className="px-3 py-2 rounded bg-black text-white">Guardar</button>
+      <form onSubmit={onSubmit} className="card">
+        <div className="card-body space-y-4">
+          <div>
+            <label className="label">Título</label>
+            <input
+              className="input"
+              name="title"
+              value={form.title}
+              onChange={onChange}
+              placeholder="Blade Runner"
+            />
+          </div>
+
+          <div>
+            <label className="label">Año</label>
+            <input
+              className="input"
+              name="year"
+              value={form.year}
+              onChange={onChange}
+              placeholder="1982"
+            />
+          </div>
+
+          <div>
+            <label className="label">Géneros (separados por coma)</label>
+            <input
+              className="input"
+              name="genres"
+              value={form.genres.join(", ")}
+              onChange={onChange}
+              placeholder="Ciencia ficción, Neo-noir"
+            />
+          </div>
+
+          <div>
+            <label className="label">Clasificación por edad</label>
+            <select
+              className="input"
+              name="ageRating"
+              value={form.ageRating}
+              onChange={onChange}
+            >
+              <option value="">(Sin clasificación)</option>
+              <option value="G">G</option>
+              <option value="PG">PG</option>
+              <option value="PG-13">PG-13</option>
+              <option value="R">R</option>
+              <option value="NC-17">NC-17</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="label">URL del poster</label>
+            <input
+              className="input"
+              name="poster"
+              value={form.poster}
+              onChange={onChange}
+              placeholder="https://…/poster.jpg"
+            />
+          </div>
+
+          <div>
+            <label className="label">Descripción</label>
+            <textarea
+              className="input"
+              name="overview"
+              value={form.overview}
+              onChange={onChange}
+              placeholder="Breve sinopsis…"
+              rows={4}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button className="btn-primary">Guardar</button>
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => navigate(-1)}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
       </form>
     </section>
   );

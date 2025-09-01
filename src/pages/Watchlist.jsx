@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { toast } from "react-toastify";
+import { safeImage } from "../utils/images"; // opcional para sanear poster
 
 export default function Watchlist() {
   const [items, setItems] = useState([]);
@@ -20,7 +21,10 @@ export default function Watchlist() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const remove = async (id) => {
     try {
@@ -33,33 +37,99 @@ export default function Watchlist() {
   };
 
   if (!profileId) {
-    return <div className="p-6 text-slate-500">Elegí un perfil primero.</div>;
+    return (
+      <section className="max-w-4xl mx-auto">
+        <div className="card">
+          <div className="card-body">
+            <p className="card-subtle">Elegí un perfil primero.</p>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (
-    <section className="p-4 md:p-6">
-      <h1 className="text-xl font-semibold mb-4">Mi Watchlist</h1>
-      {loading && <div className="py-8 text-center text-slate-500">Cargando…</div>}
-      {!loading && items.length === 0 && <div className="text-slate-500">No hay películas en tu watchlist.</div>}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {items.map((w) => (
-          <div key={w._id} className="border rounded p-3 flex justify-between items-center">
-            <div>
-              <div className="font-medium">{w.movieId?.title}</div>
-              <div className="text-sm text-slate-500">
-                {w.movieId?.year} · {w.movieId?.ageRating}
-              </div>
-            </div>
-            <button
-              onClick={() => remove(w._id)}
-              className="text-sm bg-red-600 text-white px-3 py-1 rounded"
-            >
-              Quitar
-            </button>
-          </div>
-        ))}
+    <section className="max-w-5xl mx-auto">
+      {/* Header */}
+      <div className="card mb-6">
+        <div className="card-body">
+          <h1 className="card-title">Mi Watchlist</h1>
+          <p className="card-subtle">Películas guardadas para ver más tarde.</p>
+        </div>
       </div>
+
+      {/* Loading / Empty */}
+      {loading && (
+        <div className="card mb-6">
+          <div className="card-body">
+            <p className="card-subtle text-center">Cargando…</p>
+          </div>
+        </div>
+      )}
+
+      {!loading && items.length === 0 && (
+        <div className="card">
+          <div className="card-body">
+            <p className="card-subtle">No hay películas en tu watchlist.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Listado */}
+      {!loading && items.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {items.map((w) => {
+            const m = w.movieId || {};
+            const poster = m.poster ? safeImage(m.poster) : "";
+            return (
+              <div key={w._id} className="card">
+                <div className="card-body">
+                  <div className="flex items-start gap-4">
+                    {/* Poster mini (opcional) */}
+                    <div className="w-16 h-24 rounded-xl overflow-hidden bg-slate-200/60 dark:bg-slate-800/60 flex-shrink-0">
+                      {poster ? (
+                        <img
+                          src={poster}
+                          alt={m.title || "Poster"}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "https://via.placeholder.com/64x96?text=No+img";
+                            e.currentTarget.className =
+                              "w-full h-full object-contain opacity-70";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full grid place-items-center text-xs card-subtle">
+                          Sin imagen
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="card-title truncate">{m.title}</div>
+                      <div className="card-subtle">
+                        {m.year} {m.ageRating ? `• ${m.ageRating}` : ""}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => remove(w._id)}
+                      className="btn-primary bg-red-600 hover:bg-red-700"
+                      title="Quitar de la watchlist"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

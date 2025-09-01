@@ -24,7 +24,9 @@ export default function Profiles() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const selectProfile = (p) => {
     localStorage.setItem("profileId", p._id);
@@ -61,7 +63,7 @@ export default function Profiles() {
     if (!editForm.name.trim()) return toast.warn("El nombre es requerido");
     try {
       const { data } = await api.put(`/profiles/${editingId}`, editForm);
-      setProfiles((prev) => prev.map(p => p._id === editingId ? data : p));
+      setProfiles((prev) => prev.map((p) => (p._id === editingId ? data : p)));
       toast.success("Perfil actualizado");
       cancelEdit();
     } catch (e) {
@@ -86,90 +88,154 @@ export default function Profiles() {
   };
 
   return (
-    <section className="p-4 md:p-6">
-      <div className="mb-4">
-        <h1 className="text-xl font-semibold">Perfiles</h1>
-        <p className="text-sm text-slate-500">El catálogo se ajusta según el tipo (adult/kid).</p>
+    <section className="max-w-5xl mx-auto">
+      <div className="card mb-6">
+        <div className="card-body">
+          <h1 className="card-title">Perfiles</h1>
+          <p className="card-subtle">
+            El catálogo se ajusta según el tipo seleccionado (<b>adult</b> / <b>kid</b>).
+          </p>
+        </div>
       </div>
 
-      {loading && <div className="py-8 text-center text-slate-500">Cargando…</div>}
-      {err && <div className="py-8 text-center text-red-600">{err}</div>}
+      {loading && (
+        <div className="card mb-6">
+          <div className="card-body">
+            <p className="card-subtle text-center">Cargando…</p>
+          </div>
+        </div>
+      )}
+
+      {err && (
+        <div className="card mb-6">
+          <div className="card-body">
+            <p className="text-red-600 text-center">{err}</p>
+          </div>
+        </div>
+      )}
 
       {!loading && !err && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+          {/* Lista de perfiles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             {profiles.map((p) => (
-              <div key={p._id} className="border rounded-xl p-4 flex items-center justify-between">
-                {editingId === p._id ? (
-                  <form onSubmit={saveEdit} className="flex-1 flex flex-wrap gap-2 items-center">
-                    <input
-                      className="border p-2 rounded w-44"
-                      value={editForm.name}
-                      onChange={(e) => setEditForm(s => ({ ...s, name: e.target.value }))}
-                      placeholder="Nombre"
-                    />
-                    <select
-                      className="border p-2 rounded w-36"
-                      value={editForm.type}
-                      onChange={(e) => setEditForm(s => ({ ...s, type: e.target.value }))}
-                    >
-                      <option value="adult">adult</option>
-                      <option value="kid">kid</option>
-                    </select>
-                    <div className="ml-auto flex gap-2">
-                      <button className="px-3 py-1 rounded bg-black text-white">Guardar</button>
-                      <button type="button" onClick={cancelEdit} className="px-3 py-1 rounded border">Cancelar</button>
-                    </div>
-                  </form>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => selectProfile(p)}
-                      className="text-left"
-                      title={`Tipo: ${p.type}`}
-                    >
-                      <div className="font-medium">{p.name}</div>
-                      <div className="text-xs text-slate-500">{p.type}</div>
-                    </button>
-                    <div className="flex gap-2">
+              <div key={p._id} className="card">
+                <div className="card-body">
+                  {editingId === p._id ? (
+                    <form onSubmit={saveEdit} className="flex flex-col gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="label">Nombre</label>
+                          <input
+                            className="input"
+                            value={editForm.name}
+                            onChange={(e) =>
+                              setEditForm((s) => ({ ...s, name: e.target.value }))
+                            }
+                            placeholder="Nombre"
+                          />
+                        </div>
+                        <div>
+                          <label className="label">Tipo</label>
+                          <select
+                            className="input"
+                            value={editForm.type}
+                            onChange={(e) =>
+                              setEditForm((s) => ({ ...s, type: e.target.value }))
+                            }
+                          >
+                            <option value="adult">adult</option>
+                            <option value="kid">kid</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 justify-end">
+                        <button className="btn-primary text-sm px-3 py-2">
+                          Guardar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelEdit}
+                          className="btn-ghost text-sm px-3 py-2"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="flex items-start gap-3">
                       <button
-                        onClick={() => startEdit(p)}
-                        className="px-3 py-1 text-sm rounded bg-amber-500 text-white hover:bg-amber-600"
+                        onClick={() => selectProfile(p)}
+                        className="flex-1 text-left"
+                        title={`Tipo: ${p.type}`}
                       >
-                        Editar
+                        <div className="text-base font-medium">{p.name}</div>
+                        <div className="text-xs card-subtle -mt-0.5">{p.type}</div>
                       </button>
-                      <button
-                        onClick={() => remove(p._id)}
-                        className="px-3 py-1 text-sm rounded bg-red-600 text-white hover:bg-red-700"
-                      >
-                        Eliminar
-                      </button>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => startEdit(p)}
+                          className="btn-outline text-sm px-3 py-2"
+                          title="Editar"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => remove(p._id)}
+                          className="btn-primary text-sm px-3 py-2 bg-red-600 hover:bg-red-700"
+                          title="Eliminar"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </div>
-                  </>
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </div>
 
-          <div className="max-w-md">
-            <h2 className="font-medium mb-2">Crear perfil</h2>
-            <form onSubmit={createProfile} className="space-y-2">
-              <input
-                className="border p-2 w-full rounded"
-                placeholder="Nombre (ej: Diego / Peque)"
-                value={form.name}
-                onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
-              />
-              <select
-                className="border p-2 w-full rounded"
-                value={form.type}
-                onChange={(e) => setForm((s) => ({ ...s, type: e.target.value }))}
-              >
-                <option value="adult">adult</option>
-                <option value="kid">kid</option>
-              </select>
-              <button className="px-3 py-2 rounded bg-black text-white">Crear</button>
-            </form>
+          {/* Crear perfil */}
+          <div className="card max-w-xl">
+            <div className="card-body">
+              <h2 className="card-title mb-2">Crear perfil</h2>
+              <form onSubmit={createProfile} className="space-y-3">
+                <div>
+                  <label className="label">Nombre</label>
+                  <input
+                    className="input"
+                    placeholder="Nombre (ej: Diego / Peque)"
+                    value={form.name}
+                    onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label className="label">Tipo</label>
+                  <select
+                    className="input"
+                    value={form.type}
+                    onChange={(e) => setForm((s) => ({ ...s, type: e.target.value }))}
+                  >
+                    <option value="adult">adult</option>
+                    <option value="kid">kid</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button className="btn-primary">Crear</button>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => setForm({ name: "", type: "adult" })}
+                  >
+                    Limpiar
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </>
       )}

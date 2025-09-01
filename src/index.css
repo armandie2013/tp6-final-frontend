@@ -1,3 +1,81 @@
 @import "tailwindcss";
 
+/* Para dark mode basado en .dark a nivel html */
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* === Design tokens & helpers === */
+:root {
+  --bg: 240 20% 98%;
+  --bg-dark: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-dark: 222 47% 14%;
+  --muted: 215 16% 47%;
+  --accent: 217 91% 60%;
+  --accent-2: 266 85% 58%;
+  --ring: 217 91% 60%;
+  --radius: 1.25rem;
+}
+
+/* Declarar componentes en su capa para que Tailwind no los purgue */
+@layer components {
+  /* Glass */
+  .glass {
+    @apply rounded-2xl shadow-xl border border-slate-200/70 bg-white/85 backdrop-blur-md
+           dark:bg-slate-900/70 dark:border-slate-700/60;
+  }
+
+  /* Fondo con gradientes sutiles */
+  .app-bg {
+    background-image:
+      radial-gradient(50% 50% at 0% 0%, hsl(var(--accent)/0.12), transparent 60%),
+      radial-gradient(50% 50% at 100% 0%, hsl(var(--accent-2)/0.10), transparent 60%);
+  }
+
+  /* Botones: NO usar @apply .btn dentro de otros (Tailwind v4 no deja).
+     En su lugar, repetimos las utilidades base.
+  */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition
+           bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98]
+           focus:outline-none focus:ring-2 focus:ring-blue-400/50;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition
+           border border-slate-300 text-slate-800 hover:bg-slate-100
+           dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition
+           hover:bg-slate-100 dark:hover:bg-slate-800;
+  }
+
+  /* Card: NO usar @apply .glass dentro de .card (misma razón).
+     Repetimos utilidades de glass en .card.
+  */
+  .card {
+    @apply rounded-2xl shadow-xl border border-slate-200/70 bg-white/85 backdrop-blur-md
+           dark:bg-slate-900/70 dark:border-slate-700/60;
+  }
+  .card-body {
+    @apply p-4 md:p-6;
+  }
+  .card-title {
+    @apply text-lg font-semibold;
+  }
+  .card-subtle {
+    @apply text-sm text-slate-500 dark:text-slate-400;
+  }
+
+  /* Form */
+  .input {
+    @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900
+           placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400/60
+           dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700;
+  }
+  .label {
+    @apply text-sm font-medium text-slate-700 dark:text-slate-200;
+  }
+}

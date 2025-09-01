@@ -3,79 +3,75 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ThemeButton from "./ThemeButton";
 
+const linkCls = ({ isActive }) =>
+  `px-3 py-2 rounded-xl transition ${
+    isActive
+      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+      : "hover:bg-slate-100 dark:hover:bg-slate-800"
+  }`;
+
 export default function Navbar() {
   const { isAuth, logout, role } = useAuth();
   const navigate = useNavigate();
-
   const [profileId, setProfileId] = useState(null);
   const [profileName, setProfileName] = useState(null);
 
-  // Cargar perfil activo desde localStorage
   useEffect(() => {
     setProfileId(localStorage.getItem("profileId"));
-    setProfileName(localStorage.getItem("profileName")); // opcional, si lo guardás al seleccionar
+    setProfileName(localStorage.getItem("profileName"));
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/auth/login", { replace: true });
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
   };
-
-  const clearProfile = () => {
-    localStorage.removeItem("profileId");
-    localStorage.removeItem("profileName");
-    setProfileId(null);
-    setProfileName(null);
-    navigate("/profiles");
-  };
-
-  const linkCls = ({ isActive }) =>
-    `px-3 py-1 rounded ${
-      isActive ? "bg-slate-200 dark:bg-slate-700" : "hover:bg-slate-100 dark:hover:bg-slate-800"
-    }`;
 
   return (
-    <header className="border-b bg-white/60 dark:bg-slate-900/60 backdrop-blur">
-      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-        <Link to="/" className="font-semibold">NodoCine</Link>
+    <header className="sticky top-0 z-40">
+      <div className="mx-auto max-w-6xl px-4 pt-4">
+        <nav className="glass px-4 py-3 flex items-center justify-between gap-2">
+          {/* Brand */}
+          <Link to="/" className="font-semibold tracking-tight text-lg">
+            Nodo<span className="text-blue-600">Cine</span>
+          </Link>
 
-        <nav className="flex items-center gap-2">
-          {isAuth && (
-            <>
-              <NavLink to="/profiles" className={linkCls}>Perfiles</NavLink>
-              <NavLink to="/movies" className={linkCls}>Películas</NavLink>
-              <NavLink to="/watchlist" className={linkCls}>Watchlist</NavLink>
+          {/* Links */}
+          <div className="hidden md:flex items-center gap-1">
+            <NavLink to="/" className={linkCls}>
+              Inicio
+            </NavLink>
+            <NavLink to="/movies" className={linkCls}>
+              Películas
+            </NavLink>
+            <NavLink to="/watchlist" className={linkCls}>
+              Watchlist
+            </NavLink>
+            {role === "admin" && (
+              <NavLink to="/movies/create" className={linkCls}>
+                Crear
+              </NavLink>
+            )}
+          </div>
 
-              {/* Solo owner: crear película */}
-              {role === "owner" && (
-                <NavLink to="/movies/create" className={linkCls}>Nueva película</NavLink>
-              )}
+          {/* Right actions */}
+          <div className="flex items-center gap-2">
+            {profileName && (
+              <span className="hidden sm:inline-flex items-center rounded-xl border border-slate-300 dark:border-slate-700 px-2 py-1 text-xs text-slate-600 dark:text-slate-300">
+                Perfil: <b className="ml-1">{profileName}</b>
+              </span>
+            )}
+            <ThemeButton />
 
-              {/* Chip perfil activo */}
-              {profileId && (
-                <button
-                  onClick={clearProfile}
-                  title="Cambiar perfil"
-                  className="ml-1 px-2 py-1 text-xs rounded-full bg-slate-200 dark:bg-slate-700 hover:opacity-90"
-                >
-                  Perfil • {profileName || profileId.slice(-6)}
-                </button>
-              )}
-            </>
-          )}
-
-          <ThemeButton />
-
-          {!isAuth ? (
-            <NavLink to="/auth/login" className={linkCls}>Ingresar</NavLink>
-          ) : (
-            <button
-              onClick={handleLogout}
-              className="px-3 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              Salir
-            </button>
-          )}
+            {!isAuth ? (
+              <NavLink to="/auth/login" className="btn-outline">
+                Ingresar
+              </NavLink>
+            ) : (
+              <button onClick={handleLogout} className="btn-primary">
+                Salir
+              </button>
+            )}
+          </div>
         </nav>
       </div>
     </header>

@@ -18,13 +18,15 @@ export default function AuthProvider({ children }) {
     setToken(data.token);
   };
 
-  const register = async (email, password) => {
-    await api.post("/auth/register", { email, password });
+  // 👇 Ahora recibe y envía passwordConfirm (opción A estricta)
+  const register = async (email, password, passwordConfirm) => {
+    await api.post("/auth/register", { email, password, passwordConfirm });
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("profileId");
+    localStorage.removeItem("profileName"); // pequeño extra: limpiar también el nombre
     setToken(null);
   };
 
@@ -34,6 +36,7 @@ export default function AuthProvider({ children }) {
         token,
         isAuth: !!token,
         role,
+        claims,   // opcional, puede servirte en otros lados
         login,
         register,
         logout,

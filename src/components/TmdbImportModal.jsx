@@ -21,16 +21,14 @@ export default function TmdbImportModal({
       setLoading(false);
       setLastError("");
     } else {
-      // precargar búsqueda si viene desde el listado
       if (initialQuery) {
         setQ(initialQuery);
         if (autoSearch) {
-          // microtick para que setQ se aplique antes de buscar
           setTimeout(() => search(), 0);
         }
       }
     }
-  }, [open]);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const search = async (e) => {
     e?.preventDefault?.();
@@ -74,52 +72,65 @@ export default function TmdbImportModal({
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
-      {/* contenedor del modal con altura máxima y layout en columna */}
-      <div className="w-full max-w-3xl max-h-[85vh] rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl flex flex-col">
-        {/* header fijo */}
-        <div className="flex items-center justify-between px-4 py-3 border-b dark:border-slate-700">
-          <h2 className="font-semibold">Importar desde TMDb</h2>
-          <button
-            onClick={onClose}
-            className="text-sm px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
+      {/* Contenedor del modal con nuestro estilo "glass" */}
+      <div className="w-full max-w-3xl max-h-[85vh] card flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="px-4 py-3 border-b dark:border-slate-700 flex items-center justify-between">
+          <h2 className="card-title m-0">Importar desde The Movie Database</h2>
+          <button onClick={onClose} className="btn-ghost text-sm px-3 py-1.5">
             Cerrar
           </button>
         </div>
 
-        {/* cuerpo scrollable */}
+        {/* Cuerpo scrollable */}
         <div className="flex-1 overflow-y-auto">
+          {/* Barra de búsqueda (sticky) */}
           <form
             onSubmit={search}
-            className="p-4 flex gap-2 sticky top-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur"
+            className="sticky top-0 z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b dark:border-slate-700"
           >
-            <input
-              className="border p-2 rounded w-full"
-              placeholder="Buscar película (ej: Matrix)"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-            <button className="px-3 py-2 rounded bg-black text-white" disabled={loading}>
-              {loading ? "Buscando…" : "Buscar"}
-            </button>
+            <div className="p-4 flex gap-2">
+              <input
+                className="input flex-1"
+                placeholder="Buscar película (ej: Matrix)"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+              <button className="btn-primary" disabled={loading}>
+                {loading ? "Buscando…" : "Buscar"}
+              </button>
+            </div>
           </form>
 
-          <div className="px-4 pb-4">
+          <div className="p-4">
             {loading && (
-              <div className="py-6 text-center text-slate-500">
-                Cargando resultados…
-              </div>
-            )}
-            {!loading && lastError && (
-              <div className="py-4 text-center text-red-600">{lastError}</div>
-            )}
-            {!loading && !lastError && results.length === 0 && (
-              <div className="py-6 text-center text-slate-500">
-                Ingresá un término y buscá
+              <div className="card mb-4">
+                <div className="card-body">
+                  <p className="card-subtle text-center">Cargando resultados…</p>
+                </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {!loading && lastError && (
+              <div className="card mb-4">
+                <div className="card-body">
+                  <p className="text-center text-red-600">{lastError}</p>
+                </div>
+              </div>
+            )}
+
+            {!loading && !lastError && results.length === 0 && (
+              <div className="card">
+                <div className="card-body">
+                  <p className="card-subtle text-center">
+                    Ingresá un término y buscá
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Resultados */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {results.map((r) => {
                 const title = r.title || r.name || "Sin título";
                 const year =
@@ -127,62 +138,82 @@ export default function TmdbImportModal({
                   r.release_year ||
                   (r.release_date?.slice(0, 4) || "");
                 const poster = r.poster || r.poster_path || r.image || null;
-                const rating = r.ageRating || r.certification || ""; // si el backend lo adjunta
+                const rating = r.ageRating || r.certification || "";
                 const isAdult = !!r.adult;
 
                 return (
                   <div
                     key={(r.tmdbId || r.id || title) + year}
-                    className="border rounded-lg p-3 flex gap-3 items-center dark:border-slate-700"
+                    className="card"
                   >
-                    {poster ? (
-                      <img
-                        src={
-                          poster.startsWith?.("http")
-                            ? poster
-                            : `https://image.tmdb.org/t/p/w185${poster}`
-                        }
-                        alt={title}
-                        className="w-16 h-24 object-cover rounded"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-16 h-24 bg-slate-200 rounded grid place-items-center text-xs text-slate-500">
-                        Sin img
-                      </div>
-                    )}
-
-                    <div className="flex-1">
-                      <div className="font-medium">{title}</div>
-                      <div className="text-sm text-slate-500">{year}</div>
-
-                      {/* Clasificación */}
-                      {rating && (
-                        <div className="mt-1 inline-flex items-center gap-1 text-xs">
-                          <span className="px-2 py-0.5 border rounded bg-slate-50 dark:bg-slate-800">
-                            {rating}
-                          </span>
-                          <span className="text-slate-400">Clasificación</span>
+                    <div className="card-body">
+                      <div className="flex gap-4 items-start">
+                        {/* Poster */}
+                        <div className="w-16 h-24 rounded-xl overflow-hidden bg-slate-200/60 dark:bg-slate-800/60 flex-shrink-0">
+                          {poster ? (
+                            <img
+                              src={
+                                poster.startsWith?.("http")
+                                  ? poster
+                                  : `https://image.tmdb.org/t/p/w185${poster}`
+                              }
+                              alt={title}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              decoding="async"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                e.currentTarget.src =
+                                  "https://via.placeholder.com/64x96?text=No+img";
+                                e.currentTarget.className =
+                                  "w-full h-full object-contain opacity-70";
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full grid place-items-center text-xs card-subtle">
+                              Sin imagen
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {!rating && isAdult && (
-                        <div className="mt-1 text-xs text-red-500">Solo adultos</div>
-                      )}
-                    </div>
 
-                    <button
-                      onClick={() => importOne(r)}
-                      className="px-3 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 text-sm"
-                    >
-                      Importar
-                    </button>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="card-title truncate">{title}</div>
+                          <div className="card-subtle">{year}</div>
+
+                          {/* Clasificación */}
+                          {rating && (
+                            <div className="mt-2 inline-flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs">
+                                {rating}
+                              </span>
+                              <span className="text-xs card-subtle">
+                                Clasificación
+                              </span>
+                            </div>
+                          )}
+                          {!rating && isAdult && (
+                            <div className="mt-2 text-xs text-red-500">
+                              Solo adultos
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => importOne(r)}
+                          className="btn-primary text-sm"
+                        >
+                          Importar
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
             </div>
 
-            <div className="mt-4 text-xs text-slate-500">
-              * Recordá configurar <code>TMDB_ACCESS_TOKEN</code> en el backend.
+            <div className="mt-4 text-xs card-subtle">
+              <p>Este producto utiliza la API de TMDB, pero no está avalado ni certificado por TMDB, para mas informaciión visite https://www.themoviedb.org </p>
             </div>
           </div>
         </div>
