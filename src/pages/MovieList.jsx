@@ -102,34 +102,33 @@ export default function MovieList() {
   return (
     <section className="max-w-6xl mx-auto">
       {/* Encabezado */}
-      <div className="card mb-6">
-        <div className="card-body flex items-center justify-between gap-2">
-          <div>
-            <h1 className="card-title">Películas</h1>
-            <p className="card-subtle">Buscá y filtrá resultados.</p>
-          </div>
+<div className="card mb-6">
+  <div className="card-body flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div className="w-full sm:w-auto">
+      <h1 className="card-title">Películas</h1>
+      <p className="card-subtle">Buscá y filtrá resultados.</p>
+    </div>
 
-          {/* Acciones de dueño/admin */}
-          {role === "owner" && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowImport(true)}
-                className="btn-outline"
-                title="Importar desde TMDb"
-              >
-                Importar TMDB
-              </button>
-              <Link
-                to="/movies/create"
-                className="btn-primary"
-                title="Crear una película"
-              >
-                Nueva película
-              </Link>
-            </div>
-          )}
-        </div>
+    {role === "owner" && (
+      <div className="w-full sm:w-auto flex flex-wrap justify-center sm:justify-end gap-2">
+        <button
+          onClick={() => setShowImport(true)}
+          className="btn-outline w-full sm:w-auto"
+          title="Importar desde TMDb"
+        >
+          Importar TMDB
+        </button>
+        <Link
+          to="/movies/create"
+          className="btn-primary w-full sm:w-auto"
+          title="Crear una película"
+        >
+          Nueva película
+        </Link>
       </div>
+    )}
+  </div>
+</div>
 
       {/* Filtros */}
       <form onSubmit={applyFilters} className="card mb-6">
@@ -142,7 +141,7 @@ export default function MovieList() {
           />
 
           <select
-            className="input"
+            className="input sm:justify-self-auto"
             value={genre}
             onChange={(e) => setGenre(e.target.value)}
           >
