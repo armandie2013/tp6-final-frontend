@@ -63,15 +63,18 @@ export default function MovieList() {
         limit: data.limit,
       });
 
-      // Abrir modal TMDb si hay término y la base no devuelve nada
-      const hasSearch = (search || "").trim().length > 0;
-      if (hasSearch && docs.length === 0) {
-        setTmdbInitialQuery(search.trim());
-        setTmdbAutoSearch(true);
-        setShowImport(true);
-      } else {
-        setTmdbAutoSearch(false);
-      }
+      // Abrir modal TMDb si no hay resultados y hay filtros de título o año
+const hasTitle = (search || "").trim().length > 0;
+const hasYear = (year || "").trim().length > 0;
+
+if (docs.length === 0 && (hasTitle || hasYear)) {
+  const initial = hasTitle ? search.trim() : year.trim(); // si no hay título, usa el año
+  setTmdbInitialQuery(initial);
+  setTmdbAutoSearch(true);
+  setShowImport(true);
+} else {
+  setTmdbAutoSearch(false);
+}
     } catch {
       // interceptor muestra errores
     } finally {
