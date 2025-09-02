@@ -3,7 +3,7 @@ import { api } from "../lib/api";
 import MovieCard from "../components/MovieCard";
 import { useAuth } from "../context/AuthContext";
 import TmdbImportModal from "../components/TmdbImportModal";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 
 // Tamaño de página para el backend
 const PER_PAGE = 12;
@@ -47,7 +47,7 @@ export default function MovieList() {
     try {
       const params = {
         page,
-        limit: PER_PAGE, // 
+        limit: PER_PAGE,
         ...(search ? { search } : {}),
         ...(genre ? { genre } : {}),
         ...(year ? { year } : {}),
@@ -106,19 +106,27 @@ export default function MovieList() {
         <div className="card-body flex items-center justify-between gap-2">
           <div>
             <h1 className="card-title">Películas</h1>
-            <p className="card-subtle">
-              Buscá y filtrá resultados.
-            </p>
+            <p className="card-subtle">Buscá y filtrá resultados.</p>
           </div>
 
+          {/* Acciones de dueño/admin */}
           {role === "owner" && (
-            <button
-              onClick={() => setShowImport(true)}
-              className="btn-primary"
-              title="Importar desde TMDb"
-            >
-              Importar TMDB
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowImport(true)}
+                className="btn-outline"
+                title="Importar desde TMDb"
+              >
+                Importar TMDB
+              </button>
+              <Link
+                to="/movies/create"
+                className="btn-primary"
+                title="Crear una película"
+              >
+                Nueva película
+              </Link>
+            </div>
           )}
         </div>
       </div>
@@ -245,7 +253,7 @@ export default function MovieList() {
         open={showImport}
         onClose={() => {
           setShowImport(false);
-          setTmdbAutoSearch(false); 
+          setTmdbAutoSearch(false);
         }}
         onImported={() => load(1)}
         initialQuery={tmdbInitialQuery}

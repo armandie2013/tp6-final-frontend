@@ -4,16 +4,14 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useAuth } from "../context/AuthContext";
 
-// Mantengo tu schema: géneros como string (se parte en submit), ageRating opcional
 const schema = yup.object({
   title: yup.string().required("Título requerido"),
   year: yup
     .number()
     .typeError("Año debe ser numérico")
     .min(1878, "Año inválido"),
-  genres: yup.string().nullable(), // lo transformamos a array antes de enviar
+  genres: yup.string().nullable(),
   ageRating: yup.string().nullable(),
   overview: yup.string().nullable(),
   poster: yup.string().url("URL inválida").nullable(),
@@ -21,12 +19,11 @@ const schema = yup.object({
 
 export default function MovieCreate() {
   const navigate = useNavigate();
-  const { isAuth } = useAuth();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
     reset,
   } = useForm({
     resolver: yupResolver(schema),
@@ -38,30 +35,33 @@ export default function MovieCreate() {
       overview: "",
       poster: "",
     },
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
   });
 
   const onSubmit = async (values) => {
     const payload = {
       ...values,
       year: values.year ? Number(values.year) : undefined,
-      // géneros: "accion, drama" -> ["accion", "drama"]
       genres: values.genres
         ? values.genres.split(",").map((s) => s.trim()).filter(Boolean)
         : [],
     };
+    if (!payload.ageRating) delete payload.ageRating;
 
     try {
-      await api.post("", payload);
+      await api.post("/movies", payload);
       toast.success("Película creada");
       reset();
       navigate("/movies");
     } catch (err) {
-      // los errores ya los toastea el interceptor de api
+      // el interceptor maneja el toast de error si corresponde
     }
   };
 
   return (
     <section className="max-w-3xl mx-auto">
+      {/* Header */}
       <div className="card mb-6">
         <div className="card-body">
           <h1 className="card-title">Nueva película</h1>
@@ -69,44 +69,65 @@ export default function MovieCreate() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-4">
+      {/* Form con el mismo layout que MovieEdit */}
+      <form onSubmit={handleSubmit(onSubmit)} className="card">
+        <div className="card-body space-y-4">
           <div>
             <label className="label">Título</label>
-            <input className="input" placeholder="Blade Runner" {...register("title")} />
-            {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>}
+            <input
+              className="input"
+              placeholder="Blade Runner"
+              {...register("title")}
+            />
           </div>
 
           <div>
             <label className="label">Año</label>
-            <input className="input" placeholder="1982" {...register("year")} />
-            {errors.year && <p className="text-sm text-red-600 mt-1">{errors.year.message}</p>}
+            <input
+              className="input"
+              placeholder="1982"
+              {...register("year")}
+            />
           </div>
 
           <div>
             <label className="label">Géneros (separados por coma)</label>
-            <input className="input" placeholder="Ciencia ficción, Neo-noir" {...register("genres")} />
-            {errors.genres && <p className="text-sm text-red-600 mt-1">{errors.genres.message}</p>}
+            <input
+              className="input"
+              placeholder="Ciencia ficción, Neo-noir"
+              {...register("genres")}
+            />
           </div>
 
           <div>
             <label className="label">Clasificación por edad</label>
-            <input className="input" placeholder="+13 / ATP / PG-13" {...register("ageRating")} />
-            {errors.ageRating && <p className="text-sm text-red-600 mt-1">{errors.ageRating.message}</p>}
+            <select className="input" {...register("ageRating")}>
+              <option value="">(Sin clasificación)</option>
+              <option value="G">G</option>
+              <option value="PG">PG</option>
+              <option value="PG-13">PG-13</option>
+              <option value="R">R</option>
+              <option value="NC-17">NC-17</option>
+            </select>
           </div>
-        </div>
 
-        <div className="space-y-4">
           <div>
             <label className="label">URL del poster</label>
-            <input className="input" placeholder="https://…/poster.jpg" {...register("poster")} />
-            {errors.poster && <p className="text-sm text-red-600 mt-1">{errors.poster.message}</p>}
+            <input
+              className="input"
+              placeholder="https://…/poster.jpg"
+              {...register("poster")}
+            />
           </div>
 
           <div>
             <label className="label">Descripción</label>
-            <textarea rows={5} className="input" placeholder="Breve sinopsis…" {...register("overview")} />
-            {errors.overview && <p className="text-sm text-red-600 mt-1">{errors.overview.message}</p>}
+            <textarea
+              className="input"
+              rows={4}
+              placeholder="Breve sinopsis…"
+              {...register("overview")}
+            />
           </div>
 
           <div className="flex items-center gap-2">
@@ -116,10 +137,10 @@ export default function MovieCreate() {
             <button
               type="button"
               className="btn-ghost"
-              onClick={() => reset()}
+              onClick={() => navigate(-1)}
               disabled={isSubmitting}
             >
-              Limpiar
+              Cancelar
             </button>
           </div>
         </div>

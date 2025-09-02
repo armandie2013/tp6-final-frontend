@@ -4,7 +4,6 @@ import MovieList from "../pages/MovieList";
 import MovieDetail from "../pages/MovieDetail";
 import MovieCreate from "../pages/MovieCreate";
 import MovieEdit from "../pages/MovieEdit";
-import Favorites from "../pages/Favorites"; // opcional; lo podés quitar si ya no lo usás
 import NotFound from "../pages/NotFound";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Login from "../pages/auth/Login";
