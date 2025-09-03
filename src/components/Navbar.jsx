@@ -21,6 +21,11 @@ export default function Navbar() {
     setProfileName(localStorage.getItem("profileName"));
   }, []);
 
+  // si cambia el estado de auth, cerramos el menú
+  useEffect(() => {
+    setOpen(false);
+  }, [isAuth]);
+
   const handleLogout = async () => {
     await logout();
     navigate("/");
@@ -36,7 +41,7 @@ export default function Navbar() {
             Pelis<span className="text-blue-600">Data</span>
           </Link>
 
-          {/* Desktop links */}
+          {/* Desktop links (solo si hay sesión) */}
           {isAuth && (
             <div className="hidden md:flex items-center gap-1">
               <NavLink to="/movies" className={linkCls}>
@@ -57,7 +62,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <ThemeButton />
 
-            {/* Desktop profile & logout */}
+            {/* Perfil + Salir (solo desktop y con sesión) */}
             {isAuth && (
               <>
                 {profileName && (
@@ -71,46 +76,46 @@ export default function Navbar() {
               </>
             )}
 
-            {/* Mobile menu toggle */}
-            <button
-              onClick={() => setOpen(!open)}
-              className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              {open ? (
-                <XMarkIcon className="h-6 w-6 text-slate-700 dark:text-slate-200" />
-              ) : (
-                <Bars3Icon className="h-6 w-6 text-slate-700 dark:text-slate-200" />
-              )}
-            </button>
+            {/* Toggle hamburguesa SOLO si hay sesión */}
+            {isAuth && (
+              <button
+                onClick={() => setOpen(!open)}
+                className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                aria-label="Abrir menú"
+                aria-expanded={open}
+              >
+                {open ? (
+                  <XMarkIcon className="h-6 w-6 text-slate-700 dark:text-slate-200" />
+                ) : (
+                  <Bars3Icon className="h-6 w-6 text-slate-700 dark:text-slate-200" />
+                )}
+              </button>
+            )}
           </div>
         </nav>
 
-        {/* Mobile dropdown */}
-        {open && (
+        {/* Mobile dropdown: solo si hay sesión y está abierto */}
+        {isAuth && open && (
           <div className="md:hidden mt-2 glass p-4 rounded-xl space-y-2">
-            {isAuth ? (
-              <>
-                {profileName && (
-                  <div className="text-sm text-slate-600 dark:text-slate-300 mb-2">
-                    Perfil: <b>{profileName}</b>
-                  </div>
-                )}
-                <NavLink to="/movies" className={linkCls} onClick={() => setOpen(false)}>
-                  Películas
-                </NavLink>
-                <NavLink to="/watchlist" className={linkCls} onClick={() => setOpen(false)}>
-                  Watchlist
-                </NavLink>
-                {role === "owner" && (
-                  <NavLink to="/movies/create" className={linkCls} onClick={() => setOpen(false)}>
-                    Crear
-                  </NavLink>
-                )}
-                <button onClick={handleLogout} className="btn-primary w-full">
-                  Salir
-                </button>
-              </>
-            ) : null}
+            {profileName && (
+              <div className="text-sm text-slate-600 dark:text-slate-300 mb-2">
+                Perfil: <b>{profileName}</b>
+              </div>
+            )}
+            <NavLink to="/movies" className={linkCls} onClick={() => setOpen(false)}>
+              Películas
+            </NavLink>
+            <NavLink to="/watchlist" className={linkCls} onClick={() => setOpen(false)}>
+              Watchlist
+            </NavLink>
+            {role === "owner" && (
+              <NavLink to="/movies/create" className={linkCls} onClick={() => setOpen(false)}>
+                Crear
+              </NavLink>
+            )}
+            <button onClick={handleLogout} className="btn-primary w-full">
+              Salir
+            </button>
           </div>
         )}
       </div>
