@@ -226,7 +226,7 @@ if (docs.length === 0 && (hasTitle || hasYear)) {
       )}
 
       {/* Paginación (solo si hay más de una página) */}
-      {pageInfo.totalPages > 1 && (
+      {/* {pageInfo.totalPages > 1 && (
         <div className="mt-6 flex items-center justify-center gap-2">
           <button
             onClick={() => goPage(Math.max(1, pageInfo.page - 1))}
@@ -248,7 +248,7 @@ if (docs.length === 0 && (hasTitle || hasYear)) {
             Siguiente
           </button>
         </div>
-      )}
+      )} */}
 
       {/* Modal TMDb */}
       <TmdbImportModal

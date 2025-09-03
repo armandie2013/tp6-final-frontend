@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Home from "../pages/Home";
+// import Home from "../pages/Home";
 import MovieList from "../pages/MovieList";
 import MovieDetail from "../pages/MovieDetail";
 import MovieCreate from "../pages/MovieCreate";
