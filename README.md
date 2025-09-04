@@ -51,7 +51,7 @@ npm run build
 ## 📦 Instalación de dependencias
 
 ```bash
-npm install react react-dom react-router-dom axios react-hook-form yup @hookform/resolvers react-toastify tailwindcss daisyui
+npm install react react-dom react-router-dom axios react-hook-form yup @hookform/resolvers react-toastify tailwindcss daisyui @heroicons/react
 ```
 
 ---

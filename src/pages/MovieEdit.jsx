@@ -1,131 +1,190 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import { api } from "../lib/api";
-import { toast } from "react-toastify";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+
+const schema = yup.object({
+  title: yup
+  .string()
+  .required("Título requerido")
+  .min(3,"El título debe tener al menos 3 caracteres"),
+  year: yup
+    .number()
+    .typeError("Año debe ser numérico")
+    .min(1878, "Año inválido")
+    .nullable()
+    .transform((v, o) => (o === "" ? null : v)),
+  genres: yup
+    .string()
+    .nullable()
+    .transform((v, o) => (o === "" ? null : v)),
+  ageRating: yup
+    .string()
+    .nullable()
+    .transform((v, o) => (o === "" ? null : v)),
+  overview: yup
+    .string()
+    .nullable()
+    .transform((v, o) => (o === "" ? null : v)),
+  poster: yup
+    .string()
+    .url("URL inválida")
+    .nullable()
+    .transform((v, o) => (o === "" ? null : v)),
+});
 
 export default function MovieEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    title: "",
-    year: "",
-    genres: [],
-    ageRating: "",
-    overview: "",
-    poster: "",
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setError,
+  } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      title: "",
+      year: "",
+      genres: "",
+      ageRating: "",
+      overview: "",
+      poster: "",
+    },
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
+    shouldFocusError: true,
   });
-  const [loading, setLoading] = useState(true);
 
+  // Cargar datos y setear defaults
   useEffect(() => {
-    api
-      .get(`/movies/${id}`)
-      .then(({ data }) => {
-        setForm({
+    let mounted = true;
+    (async () => {
+      try {
+        const { data } = await api.get(`/movies/${id}`);
+        if (!mounted) return;
+
+        reset({
           title: data.title || "",
           year: data.year ?? "",
-          genres: Array.isArray(data.genres) ? data.genres : [],
+          // en el form de edición mostramos géneros como string separado por coma
+          genres: Array.isArray(data.genres) ? data.genres.join(", ") : "",
           ageRating: data.ageRating ?? "",
           overview: data.overview || "",
           poster: data.poster || "",
         });
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-        toast.error("No se pudo cargar la película");
-      });
-  }, [id]);
+      } catch (e) {
+        // si usás el interceptor sin toast para 4xx, podés mostrar inline:
+        setError("title", {
+          type: "server",
+          message: "No se pudo cargar la película",
+        });
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [id, reset, setError]);
 
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setForm((s) => ({
-      ...s,
-      [name]:
-        name === "genres"
-          ? value.split(",").map((v) => v.trim()).filter(Boolean)
-          : value,
-    }));
-  };
+  const onSubmit = async (values) => {
+    const payload = {
+      ...values,
+      year: values.year ? Number(values.year) : undefined,
+      genres: values.genres
+        ? values.genres
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
+    };
+    if (!payload.ageRating) delete payload.ageRating;
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
     try {
-      const payload = { ...form };
-      if (!payload.ageRating) delete payload.ageRating;
-
       await api.put(`/movies/${id}`, payload);
-      toast.success("Película actualizada");
       navigate(`/movies/${id}`, { replace: true });
     } catch (err) {
-      toast.error(err?.response?.data?.error || "No se pudo actualizar");
+      const status = err?.response?.status;
+      const data = err?.response?.data || {};
+      const msg = data.error || "No se pudo actualizar";
+
+      // 1) Errores por campo del backend
+      if (data.errors && typeof data.errors === "object") {
+        Object.entries(data.errors).forEach(([field, message]) => {
+          setError(field, { type: "server", message: String(message) });
+        });
+        return;
+      }
+
+      // 2) Permisos / auth
+      if (status === 401 || status === 403) {
+        setError("title", {
+          type: "server",
+          message: msg || "Permisos insuficientes",
+        });
+        return;
+      }
+
+      // 3) Genérico visible
+      setError("title", { type: "server", message: msg });
     }
   };
-
-  if (loading) {
-    return (
-      <section className="max-w-3xl mx-auto">
-        <div className="card">
-          <div className="card-body">
-            <p className="card-subtle">Cargando…</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section className="max-w-3xl mx-auto">
       <div className="card mb-6">
         <div className="card-body">
           <h1 className="card-title">Editar película</h1>
-          <p className="card-subtle">Modificá los datos y guardá los cambios.</p>
+          <p className="card-subtle">
+            Modificá los datos y guardá los cambios.
+          </p>
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="card">
+      <form onSubmit={handleSubmit(onSubmit)} className="card">
         <div className="card-body space-y-4">
           <div>
             <label className="label">Título</label>
             <input
               className="input"
-              name="title"
-              value={form.title}
-              onChange={onChange}
               placeholder="Blade Runner"
+              {...register("title")}
             />
+            {errors.title && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.title.message}
+              </p>
+            )}
           </div>
 
           <div>
             <label className="label">Año</label>
-            <input
-              className="input"
-              name="year"
-              value={form.year}
-              onChange={onChange}
-              placeholder="1982"
-            />
+            <input className="input" placeholder="1982" {...register("year")} />
+            {errors.year && (
+              <p className="text-sm text-red-600 mt-1">{errors.year.message}</p>
+            )}
           </div>
 
           <div>
             <label className="label">Géneros (separados por coma)</label>
             <input
               className="input"
-              name="genres"
-              value={form.genres.join(", ")}
-              onChange={onChange}
               placeholder="Ciencia ficción, Neo-noir"
+              {...register("genres")}
             />
+            {errors.genres && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.genres.message}
+              </p>
+            )}
           </div>
 
           <div>
             <label className="label">Clasificación por edad</label>
-            <select
-              className="input"
-              name="ageRating"
-              value={form.ageRating}
-              onChange={onChange}
-            >
+            <select className="input" {...register("ageRating")}>
               <option value="">(Sin clasificación)</option>
               <option value="G">G</option>
               <option value="PG">PG</option>
@@ -133,37 +192,51 @@ export default function MovieEdit() {
               <option value="R">R</option>
               <option value="NC-17">NC-17</option>
             </select>
+            {errors.ageRating && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.ageRating.message}
+              </p>
+            )}
           </div>
 
           <div>
             <label className="label">URL del poster</label>
             <input
               className="input"
-              name="poster"
-              value={form.poster}
-              onChange={onChange}
               placeholder="https://…/poster.jpg"
+              {...register("poster")}
             />
+            {errors.poster && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.poster.message}
+              </p>
+            )}
           </div>
 
           <div>
             <label className="label">Descripción</label>
             <textarea
               className="input"
-              name="overview"
-              value={form.overview}
-              onChange={onChange}
-              placeholder="Breve sinopsis…"
               rows={4}
+              placeholder="Breve sinopsis…"
+              {...register("overview")}
             />
+            {errors.overview && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.overview.message}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
-            <button className="btn-primary">Guardar</button>
+            <button className="btn-primary" disabled={isSubmitting}>
+              {isSubmitting ? "Guardando…" : "Guardar"}
+            </button>
             <button
               type="button"
               className="btn-ghost"
               onClick={() => navigate(-1)}
+              disabled={isSubmitting}
             >
               Cancelar
             </button>
