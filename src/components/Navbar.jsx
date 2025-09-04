@@ -44,14 +44,14 @@ export default function Navbar() {
           {/* Desktop links (solo si hay sesión) */}
           {isAuth && (
             <div className="hidden md:flex items-center gap-1">
-              <NavLink to="/movies" className={linkCls}>
+              <NavLink to="/movies" end className={linkCls}>
                 Películas
               </NavLink>
-              <NavLink to="/watchlist" className={linkCls}>
+              <NavLink to="/watchlist" end className={linkCls}>
                 Watchlist
               </NavLink>
               {role === "owner" && (
-                <NavLink to="/movies/create" className={linkCls}>
+                <NavLink to="/movies/create" end className={linkCls}>
                   Crear
                 </NavLink>
               )}
@@ -70,7 +70,10 @@ export default function Navbar() {
                     Perfil: <b className="ml-1">{profileName}</b>
                   </span>
                 )}
-                <button onClick={handleLogout} className="btn-primary hidden md:inline-flex">
+                <button
+                  onClick={handleLogout}
+                  className="btn-primary hidden md:inline-flex"
+                >
                   Salir
                 </button>
               </>
@@ -102,14 +105,29 @@ export default function Navbar() {
                 Perfil: <b>{profileName}</b>
               </div>
             )}
-            <NavLink to="/movies" className={linkCls} onClick={() => setOpen(false)}>
+            <NavLink
+              to="/movies"
+              end
+              className={linkCls}
+              onClick={() => setOpen(false)}
+            >
               Películas
             </NavLink>
-            <NavLink to="/watchlist" className={linkCls} onClick={() => setOpen(false)}>
+            <NavLink
+              to="/watchlist"
+              end
+              className={linkCls}
+              onClick={() => setOpen(false)}
+            >
               Watchlist
             </NavLink>
             {role === "owner" && (
-              <NavLink to="/movies/create" className={linkCls} onClick={() => setOpen(false)}>
+              <NavLink
+                to="/movies/create"
+                end
+                className={linkCls}
+                onClick={() => setOpen(false)}
+              >
                 Crear
               </NavLink>
             )}
